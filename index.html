@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="style.css" />
+
+    <title>Online Plagiarism Checker</title>
+</head>
+<body>
+
+<div class="container">
+    <h2>PLAGIESCAN</h2>
+
+    <!-- File Upload -->
+    <form action="dev.php" method="post" enctype="multipart/form-data" class="upload-box">
+        <input type="file" name="file" id="fileInput" style="display: none;" />
+        <button type="button" class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+        <p id="fileName">No file selected</p>
+        <button type="submit" class="start-btn">Upload & Check</button>
+    </form>
+
+    <!-- Text Input -->
+    <textarea id="textInput" placeholder="Or paste your text here..."></textarea>
+
+    <!-- OCR from camera (mobile only) -->
+    <button class="scan-btn" onclick="openCamera()">📷 Scan with Camera</button>
+
+    <!-- Controls -->
+    <div class="file-options">
+        <span onclick="clearText()">🗑 Clear</span>
+        <span onclick="copyText()">📋 Copy</span>
+    </div>
+
+    <!-- Plagiarism Check -->
+    <button class="check-btn" onclick="checkPlagiarism()">Check Plagiarism</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+<script src="dev.js"></script>
+<script>
+// Global variable to store OCR language
+let ocrLanguage = 'eng';
+
+function changeOcrLanguage() {
+    ocrLanguage = document.getElementById('ocrLanguage').value;
+}
+
+function clearText() {
+    document.getElementById("textInput").value = "";
+    document.getElementById("fileInput").disabled = false;
+}
+
+function copyText() {
+    let textArea = document.getElementById("textInput");
+    textArea.select();
+    document.execCommand("copy");
+    alert("Text copied!");
+}
+
+// Show selected file name
+document.getElementById("fileInput").addEventListener("change", function () {
+    let fileName = this.files.length > 0 ? this.files[0].name : "No file selected";
+    document.getElementById("fileName").textContent = fileName;
+});
+
+function checkPlagiarism() {
+    let text = document.getElementById("textInput").value;
+    if (text.trim() === "") {
+        alert("Please enter or scan text to check for plagiarism.");
+        return;
+    }
+     let plagiarismScore = calculatePlagiarismScore(text);
+    alert(`Plagiarism Score: ${plagiarismScore}%`);
+}
+
+function calculatePlagiarismScore(text) {
+let mockScore = Math.floor(Math.random() * 101); 
+return mockScore;
+}
+Explanation:
+
+    fetch("check_plagiarism.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "text=" + encodeURIComponent(text)
+    })
+    .then(response => response.text())
+    .then(data => alert("Plagiarism Check Result:\n" + data))
+    .catch(error => console.error("Error:", error));
+
+
+
+function openCamera() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment"; // back camera
+    input.onchange = () => {
+        const file = input.files[0];
+        if (file) {
+            Tesseract.recognize(
+                file,
+                ocrLanguage,
+                { logger: m => console.log(m) }
+            ).then(({ data: { text } }) => {
+                document.getElementById("textInput").value = text.trim();
+                document.getElementById("fileInput").disabled = true;
+                alert("Text scanned! You can now check for plagiarism.");
+            }).catch(err => {
+                console.error(err);
+                alert("Failed to extract text.");
+            });
+        }
+    };
+    input.click();
+}
+</script>
+
+<style>
+    body {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    background-color: #b4f8b1;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background: rgb(132, 243, 151);
+    padding: 30px 20px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+}
+
+.upload-box {
+    border: 2px dashed #ddd;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.upload-btn, .start-btn, .check-btn, .scan-btn {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 250px;
+    font-size: 16px;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.start-btn { background-color: #ff5e57; }
+.check-btn { background-color: #28a745; }
+.scan-btn { background-color: #6f42c1; }
+
+.upload-btn:hover, .start-btn:hover, .check-btn:hover, .scan-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+#fileName {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+    word-wrap: break-word;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    resize: vertical;
+}
+
+.file-options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: gray;
+    margin-top: 10px;
+}
+
+.file-options span {
+    cursor: pointer;
+    user-select: none;
+}
+
+.file-options span:hover {
+    color: #333;
+}
+
+@media screen and (max-width: 480px) {
+    .upload-btn, .start-btn, .check-btn, .scan-btn {
+        font-size: 14px;
+        max-width: 100%;
+    }
+
+    textarea {
+        font-size: 14px;
+        height: 100px;
+    }
+
+    .file-options {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #fileName {
+        font-size: 13px;
+        text-align: center;
+    }
+}
+
+</style>
+
+</body>
+</html>
